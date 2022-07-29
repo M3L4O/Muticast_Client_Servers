@@ -55,7 +55,7 @@ while(True):
             print('RID recebido')
             try:
                 #esperando resposta de outros servidores
-                sock.settimeout(((ID * TIME_TO_WAIT) / MAIOR_ID) - (TIME_TO_WAIT/MAIOR_ID))
+                sock.settimeout(((ID * TIME_TO_WAIT_ID) / MAIOR_ID) - (TIME_TO_WAIT_ID/MAIOR_ID))
                 while True:
                     response = sock.recv(4096).decode()
 
