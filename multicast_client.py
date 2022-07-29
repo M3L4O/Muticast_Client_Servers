@@ -15,9 +15,11 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 expr = input("Digite uma expressão: ")
 sock.sendto(str.encode(expr), (MCAST_GRP, MCAST_PORT))
 print("Enviado: {}".format(expr))
+
+sock.settimeout(10) #setando tempo máximo de espera
 data = sock.recv(4096).decode()
+
 while data.split(":")[0] != "response":
     print(data)
-    sock.settimeout(10)
     data = sock.recv(4096).decode()
 print("Recebido: {}".format(data.split(":")[1]))

@@ -1,6 +1,5 @@
 import socket
 import struct
-from time import sleep
 
 MCAST_GRP = "224.1.1.1"
 MCAST_PORT = 5004
@@ -10,8 +9,38 @@ sock.bind(("", MCAST_PORT))
 mreq = struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-ID = int(input("Digite o ID do server: "))
-TIME_TO_WAIT = 2
+#ID = int(input("Digite o ID do server: "))
+TIME_TO_WAIT_ID = 4
+TIME_TO_WAIT = 0.5
+
+
+#solicita uma nova id
+try:
+    
+    sock.sendto(str.encode('RID'), (MCAST_GRP, MCAST_PORT))
+
+    while True:
+
+        sock.settimeout(TIME_TO_WAIT_ID)
+        response = sock.recv(4096).decode()
+
+        if response.__contains__('RID'):
+            continue
+
+        #verifica se uma id foi recebida
+        if response.__contains__('NID'):
+            ID = eval(response.split(':')[1])
+            MAIOR_ID = ID
+            break
+
+except:
+    #caso nenhuma id seja recebida, supõe-se que nenhum outro servidor esteja ativo
+    ID = 1
+    MAIOR_ID = 1
+
+
+print('ID do processo: {}'.format(ID))
+
 
 while(True):
     try:
@@ -21,13 +50,43 @@ while(True):
         if request.__contains__('response'):
             continue
 
+        #requisição de id recebida
+        if request.__contains__('RID'):
+            print('RID recebido')
+            try:
+                #esperando resposta de outros servidores
+                sock.settimeout(((ID * TIME_TO_WAIT) / MAIOR_ID) - (TIME_TO_WAIT/MAIOR_ID))
+                while True:
+                    response = sock.recv(4096).decode()
+
+                    #atualizando ID máxima
+                    if(response.__contains__('NID')):
+                        MAIOR_ID = eval(response.split(':')[1])
+                        print('Novo id maximo setado para: {}'.format(MAIOR_ID))
+                        break
+
+            except:
+                #enviando resposta com o incremento da maior id
+                print('enviando NID {}'.format(MAIOR_ID + 1))
+                sock.sendto(str.encode('NID:{}'.format(MAIOR_ID + 1)), (MCAST_GRP, MCAST_PORT))
+            
+            continue
+        
+        #atualizando maior id, caso um NID seja recebido
+        if request.__contains__('NID'):
+            MAIOR_ID = eval(request.split(':')[1])
+            continue
+
+
         if ID > 1:
             sock.settimeout(ID * TIME_TO_WAIT)
             try:
                 response = sock.recv(4096).decode()
                 continue
             except:
-                print('main server response timeout, sending response...')
+                print('O servidor com id menor não respondeu no tempo estabelecido.\nEnviando resposta')
+
+        
 
         print("Recebido:{} ".format(request))
         response = "response:{}".format(eval(request))
@@ -37,3 +96,4 @@ while(True):
 
     except KeyboardInterrupt:
         print('Encerrando Programa.')
+        exit()
