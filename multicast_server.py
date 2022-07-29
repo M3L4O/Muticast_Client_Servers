@@ -19,8 +19,10 @@ if ID > 1:
     sock.settimeout(ID * TIME_TO_WAIT)
     try:
         request = sock.recv(4096).decode()
+    except:
+        print('Erro')
 
-print("Recebido:{} ".format(data))
-response = "response:{}".format(eval(data))
+print("Recebido:{} ".format(request))
+response = "response:{}".format(eval(request))
 sock.sendto(str.encode(response), (MCAST_GRP, MCAST_PORT))
 print("Enviado: {}".format(response.split(":")[1]))
