@@ -13,6 +13,7 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 TIME_TO_WAIT_ID = 4
 TIME_TO_WAIT = 0.5
 
+print('solicitando uma ID...')
 
 #solicita uma nova id
 try:
@@ -35,11 +36,12 @@ try:
 
 except:
     #caso nenhuma id seja recebida, supõe-se que nenhum outro servidor esteja ativo
+    print('Nenhuma resposta obtida.')
     ID = 1
     MAIOR_ID = 1
 
 
-print('ID do processo: {}'.format(ID))
+print('ID definida: {}'.format(ID))
 
 
 while(True):
@@ -52,7 +54,7 @@ while(True):
 
         #requisição de id recebida
         if request.__contains__('RID'):
-            print('RID recebido')
+            print('Requisição por ID recebida...')
             try:
                 #esperando resposta de outros servidores
                 sock.settimeout(((ID * TIME_TO_WAIT_ID) / MAIOR_ID) - (TIME_TO_WAIT_ID/MAIOR_ID))
@@ -62,12 +64,12 @@ while(True):
                     #atualizando ID máxima
                     if(response.__contains__('NID')):
                         MAIOR_ID = eval(response.split(':')[1])
-                        print('Novo id maximo setado para: {}'.format(MAIOR_ID))
+                        print('Maior ID setada para: {}'.format(MAIOR_ID))
                         break
 
             except:
                 #enviando resposta com o incremento da maior id
-                print('enviando NID {}'.format(MAIOR_ID + 1))
+                print('Enviando ID {} como resposta...'.format(MAIOR_ID + 1))
                 sock.sendto(str.encode('NID:{}'.format(MAIOR_ID + 1)), (MCAST_GRP, MCAST_PORT))
             
             continue
@@ -84,7 +86,7 @@ while(True):
                 response = sock.recv(4096).decode()
                 continue
             except:
-                print('O servidor com id menor não respondeu no tempo estabelecido.\nEnviando resposta')
+                print('O servidor com ID menor não respondeu no tempo estabelecido.')
 
         
 
