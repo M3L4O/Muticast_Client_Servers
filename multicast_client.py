@@ -18,5 +18,6 @@ print("Enviado: {}".format(expr))
 data = sock.recv(4096).decode()
 while data.split(":")[0] != "response":
     print(data)
+    sock.settimeout(10)
     data = sock.recv(4096).decode()
 print("Recebido: {}".format(data.split(":")[1]))
